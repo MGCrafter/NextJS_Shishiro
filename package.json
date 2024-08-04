@@ -20,6 +20,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cobe": "^0.6.3",
+    "docker": "^1.0.0",
     "framer-motion": "^11.3.19",
     "lucide-react": "^0.416.0",
     "mini-svg-data-uri": "^1.4.4",

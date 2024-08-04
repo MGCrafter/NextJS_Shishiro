@@ -1,4 +1,4 @@
-# Use official Node.js runtime as a parent image
+# Stage 1: Build the application
 FROM node:18-alpine AS builder
 
 # Set working directory
@@ -10,27 +10,27 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy all project files
+# Copy the rest of the application
 COPY . .
 
 # Build the application
 RUN npm run build
 
-# Install production dependencies only
+# Stage 2: Create the production image
 FROM node:18-alpine AS runner
 
 # Set working directory
 WORKDIR /app
 
-# Install production dependencies
+# Copy only production dependencies
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
 
-# Copy built application from builder stage
+# Copy the built application from the builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 
-# Expose port and start the application
+# Expose port and define the start command
 EXPOSE 3000
 CMD ["npm", "start"]
