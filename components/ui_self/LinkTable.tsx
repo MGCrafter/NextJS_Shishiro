@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { fetchLinks, addLink, updateLink, deleteLink } from "../../lib/utils";
 import LinkForm from "./LinkForm";
 import { LinkData } from "../../types/directus";
-import Spinner from "./Spinner";
+import Spinner from "./spinner";
 import { toast } from "react-toastify";
 
 const LinkTable: React.FC = () => {

@@ -10,7 +10,7 @@ import {
 } from '../../lib/utils';
 import WelcomeForm from './WelcomeForm';
 import { WelcomeMessageData } from '../../types/directus';
-import Spinner from './Spinner';
+import Spinner from './spinner';
 import { toast } from 'react-toastify';
 
 const WelcomeTable: React.FC = () => {

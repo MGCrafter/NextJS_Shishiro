@@ -7,9 +7,9 @@ import {
   updateHeaderMessage,
   deleteHeaderMessage,
 } from "../../lib/utils";
-import HeaderForm from "./HeaderForm"; // Stelle sicher, dass der Import korrekt ist
+import HeaderForm from "./HeaderForm";
 import { HeaderMessageData } from "../../types/directus";
-import Spinner from "./Spinner"; // Stelle sicher, dass der Import korrekt ist
+import Spinner from "./spinner"; 
 import { toast } from "react-toastify";
 
 const HeaderTable: React.FC = () => {
