@@ -1,27 +1,36 @@
-# Install dependencies only when needed
-FROM node:18-alpine AS deps
+# Use official Node.js runtime as a parent image
+FROM node:18-alpine AS builder
+
+# Set working directory
 WORKDIR /app
-COPY package.json package-lock.json* ./ 
+
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm ci
 
-# Rebuild the source code only when needed
-FROM node:18-alpine AS builder
-WORKDIR /app
+# Copy all project files
 COPY . .
-COPY --from=deps /app/node_modules ./node_modules
+
+# Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Install production dependencies only
 FROM node:18-alpine AS runner
+
+# Set working directory
 WORKDIR /app
 
-ENV NODE_ENV production
+# Install production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 
-COPY --from=builder /app/public ./public
+# Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
+# Expose port and start the application
 EXPOSE 3000
-
 CMD ["npm", "start"]
