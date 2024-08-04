@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { DIRECTUS_URL, MODELS } from "../lib/config.js"; 
 import { Button } from "@/components/ui/moving-border";
-import Spinner from "../components/ui/Spinner";
+import Spinner from "../components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Footer from "@/components/footer.js";
