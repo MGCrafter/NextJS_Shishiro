@@ -22,7 +22,7 @@ FROM node:18-alpine AS runner
 # Set working directory
 WORKDIR /app
 
-# Copy only production dependencies
+# Install production dependencies
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
 
