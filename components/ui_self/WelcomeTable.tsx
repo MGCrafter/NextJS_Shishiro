@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DIRECTUS_URL, MODELS } from "@/lib/config";
-import { WelcomeMessageData } from "@/types/directus";
+import { DIRECTUS_URL, MODELS } from "../../lib/config";
+import { WelcomeMessageData } from "../../types/directus";
 import { toast } from 'react-toastify';
 
 const WelcomeTable = () => {

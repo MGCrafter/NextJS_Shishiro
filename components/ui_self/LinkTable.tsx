@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DIRECTUS_URL, MODELS } from "@/lib/config";
-import { LinkData } from "@/types/directus";
+import { DIRECTUS_URL, MODELS } from "../../lib/config";
+import { LinkData } from "../../types/directus";
 import { toast } from 'react-toastify';
 
 const LinkTable = () => {
