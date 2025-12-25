@@ -9,7 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Aceternity UI Komponente importieren
-import { Tabs } from "@/components/ui/tabs";
+import { Tabs } from "../../components/ui/tabs";
 
 // Deine eigenen Editor-Komponenten importieren
 import LinkEditor from "../../components/admin/LinkEditor";
