@@ -165,7 +165,7 @@ components/ui/sparkles.tsx
 components/ui/spotlight.tsx
 components/ui/sticky-scroll-reveal.tsx
 components/ui/svg-mask-effect.tsx
-components/ui/tabs.tsx
+# components/ui/tabs.tsx  # NEEDED - do not ignore!
 components/ui/tailwindcss-buttons.tsx
 components/ui/text-generate-effect.tsx
 components/ui/text-reveal-card.tsx
