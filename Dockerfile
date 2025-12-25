@@ -1,36 +1,62 @@
-# Stage 1: Build the application
-FROM node:18-alpine AS builder
-
-# Set working directory
+# Stage 1: Install dependencies
+FROM node:18-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files
 COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy the rest of the application
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Stage 2: Create the production image
-FROM node:18-alpine AS runner
-
-# Set working directory
+# Stage 2: Build the application
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Install production dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
-# Copy the built application from the builder stage
-COPY --from=builder /app/.next ./.next
+# Copy application files
+COPY . .
+
+# Set environment variables for build
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Build the application with standalone output
+RUN npm run build
+
+# Stage 3: Production image
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy only necessary files
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
 
-# Expose port and define the start command
+# Set correct permissions for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
 EXPOSE 3000
-CMD ["npm", "start"]
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Start the application
+CMD ["node", "server.js"]
