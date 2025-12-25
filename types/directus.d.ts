@@ -1,15 +1,15 @@
 export interface WelcomeMessageData {
-  id?: number;
+  id: number;
   message: string;
 }
 
 export interface HeaderMessageData {
-  id?: number;
+  id: number;
   header: string;
 }
   
   export interface LinkData {
-    id?: number;
+    id: number;
     url: string;
     title: string;
   }

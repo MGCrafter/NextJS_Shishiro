@@ -11,19 +11,21 @@
   "dependencies": {
     "@radix-ui/react-hover-card": "^1.1.1",
     "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@react-three/drei": "^9.109.2",
     "@react-three/fiber": "^8.16.8",
     "@tabler/icons-react": "^3.11.0",
     "@tsparticles/engine": "^3.5.0",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.5.0",
+    "autoprefixer": "^10.4.23",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cobe": "^0.6.3",
-    "docker": "^1.0.0",
     "framer-motion": "^11.3.19",
     "lucide-react": "^0.416.0",
     "mini-svg-data-uri": "^1.4.4",
+    "motion": "^12.23.26",
     "next": "14.2.5",
     "qss": "^3.0.0",
     "react": "^18",
@@ -34,7 +36,8 @@
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.167.0",
-    "three-globe": "^2.31.1"
+    "three-globe": "^2.31.1",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@types/node": "^20",

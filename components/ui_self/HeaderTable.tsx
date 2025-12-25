@@ -1,133 +1,71 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  fetchHeaderMessages,
-  addHeaderMessage,
-  updateHeaderMessage,
-  deleteHeaderMessage,
-} from "../../lib/utils";
-import HeaderForm from "./HeaderForm";
-import { HeaderMessageData } from "../../types/directus";
-import Spinner from "./spinner"; 
-import { toast } from "react-toastify";
+import { useState, useEffect } from 'react';
+import { DIRECTUS_URL, MODELS } from "@/lib/config";
+import { HeaderMessageData } from "@/types/directus";
+import { toast } from 'react-toastify';
 
-const HeaderTable: React.FC = () => {
+const HeaderTable = () => {
   const [headers, setHeaders] = useState<HeaderMessageData[]>([]);
-  const [editingHeader, setEditingHeader] = useState<HeaderMessageData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getHeaders() {
-      setLoading(true);
+    const fetchHeaders = async () => {
       try {
-        const data = await fetchHeaderMessages();
-        setHeaders(data || []);
+        const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`);
+        const data = await response.json();
+        setHeaders(data.data);
       } catch (error) {
-        toast.error("Error fetching header messages.");
-        console.error("Error fetching headers:", error);
+        toast.error("Fehler beim Laden des Headers.");
+        console.error(error);
       } finally {
         setLoading(false);
       }
-    }
-    getHeaders();
+    };
+
+    fetchHeaders();
   }, []);
 
-  const handleEdit = (header: HeaderMessageData) => {
-    setEditingHeader(header);
-  };
-
   const handleDelete = async (id: number) => {
-    setLoading(true);
+    if (!confirm("Bist du sicher? Dies ist der Haupttitel der Seite.")) return;
+
     try {
-      await deleteHeaderMessage(id);
+      const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error("Fehler beim Löschen");
+      
       setHeaders(headers.filter(header => header.id !== id));
-      toast.success("Header successfully deleted!");
+      toast.success("Header erfolgreich gelöscht!");
     } catch (error) {
-      toast.error("Error deleting header message.");
-      console.error("Error deleting header:", error);
-    } finally {
-      setLoading(false);
+      toast.error("Fehler beim Löschen des Headers.");
+      console.error(error);
     }
   };
 
-  const handleFormSubmit = async (header: HeaderMessageData) => {
-    setLoading(true);
-    try {
-      if (editingHeader) {
-        // Update existing header
-        const updatedHeader = await updateHeaderMessage(editingHeader.id!, header);
-        setHeaders(headers.map((h) => (h.id === updatedHeader.id ? updatedHeader : h)));
-        setEditingHeader(null);
-        toast.success("Header successfully updated!");
-      } else if (headers.length === 0) {
-        // Add new header if none exists
-        const newHeader = await addHeaderMessage(header);
-        setHeaders([newHeader]);
-        toast.success("Header successfully added!");
-      } else {
-        // Show error if a header already exists
-        toast.error("Only one header is allowed.");
-      }
-    } catch (error) {
-      toast.error("Error saving header message.");
-      console.error("Error saving header:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingHeader(null);
-  };
+  if (loading) return <div>Lade Daten...</div>;
 
   return (
-    <div>
-      {loading && <Spinner />}
-      <HeaderForm
-        editingHeader={editingHeader}
-        onFormSubmit={handleFormSubmit}
-        onCancel={handleCancel}
-      />
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="px-4 py-2">Header</th>
-              <th className="px-4 py-2">Actions</th>
+    <div className="overflow-x-auto shadow-xl rounded-lg border border-slate-700">
+      <table className="w-full text-sm text-left text-slate-300">
+        <thead className="text-xs uppercase bg-slate-700 text-slate-300">
+          <tr>
+            <th scope="col" className="px-6 py-3">Header Text</th>
+            <th scope="col" className="px-6 py-3 text-right">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {headers.map((header) => (
+            <tr key={header.id} className="border-b bg-slate-800/50 border-slate-700 hover:bg-slate-700">
+              <td className="px-6 py-4 font-medium text-slate-200">{header.header}</td>
+              <td className="px-6 py-4 text-right space-x-4">
+                <a href={`/admin/header/edit/${header.id}`} className="font-medium text-indigo-400 hover:underline">Editieren</a>
+                <button onClick={() => handleDelete(header.id)} className="font-medium text-red-400 hover:underline">Löschen</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {headers.length > 0 ? (
-              headers.map((header) => (
-                <tr key={header.id}>
-                  <td className="border px-4 py-2">{header.header}</td> {/* Änderung hier */}
-                  <td className="border px-4 py-2">
-                    <button
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                      onClick={() => handleEdit(header)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                      onClick={() => handleDelete(header.id!)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={2} className="border px-4 py-2 text-center">
-                  No headers available
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

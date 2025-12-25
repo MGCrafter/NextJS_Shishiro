@@ -1,122 +1,71 @@
-// components/ui_self/WelcomeTable.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
-import {
-  fetchWelcomeMessages,
-  addWelcomeMessage,
-  updateWelcomeMessage,
-  deleteWelcomeMessage,
-} from '../../lib/utils';
-import WelcomeForm from './WelcomeForm';
-import { WelcomeMessageData } from '../../types/directus';
-import Spinner from './spinner';
+import { DIRECTUS_URL, MODELS } from "@/lib/config";
+import { WelcomeMessageData } from "@/types/directus";
 import { toast } from 'react-toastify';
 
-const WelcomeTable: React.FC = () => {
+const WelcomeTable = () => {
   const [messages, setMessages] = useState<WelcomeMessageData[]>([]);
-  const [editingMessage, setEditingMessage] = useState<WelcomeMessageData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getMessages() {
-      setLoading(true);
+    const fetchMessages = async () => {
       try {
-        const data = await fetchWelcomeMessages();
-        setMessages(data || []);
+        const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`);
+        const data = await response.json();
+        setMessages(data.data);
       } catch (error) {
-        toast.error('Fehler beim Abrufen der Nachrichten.');
-        console.error('Error fetching messages:', error);
+        toast.error("Fehler beim Laden der Welcome-Message.");
+        console.error(error);
       } finally {
         setLoading(false);
       }
-    }
-    getMessages();
+    };
+
+    fetchMessages();
   }, []);
 
-  const handleEdit = (message: WelcomeMessageData) => {
-    setEditingMessage(message);
-  };
-
   const handleDelete = async (id: number) => {
-    setLoading(true);
+    if (!confirm("Bist du sicher, dass du diese Nachricht löschen möchtest?")) return;
+
     try {
-      await deleteWelcomeMessage(id);
-      setMessages([]);
-      toast.success('Nachricht erfolgreich gelöscht!');
+      const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error("Fehler beim Löschen");
+      
+      setMessages(messages.filter(msg => msg.id !== id));
+      toast.success("Nachricht erfolgreich gelöscht!");
     } catch (error) {
-      toast.error('Fehler beim Löschen der Nachricht.');
-      console.error('Error deleting message:', error);
-    } finally {
-      setLoading(false);
+      toast.error("Fehler beim Löschen der Nachricht.");
+      console.error(error);
     }
   };
 
-  const handleFormSubmit = async (message: WelcomeMessageData) => {
-    setLoading(true);
-    try {
-      if (editingMessage) {
-        // Update existing message
-        const updatedMessage = await updateWelcomeMessage(editingMessage.id!, message);
-        setMessages(messages.map((m) => (m.id === updatedMessage.id ? updatedMessage : m)));
-        setEditingMessage(null);
-        toast.success('Nachricht erfolgreich aktualisiert!');
-      } else if (messages.length === 0) {
-        // Add new message if no existing messages
-        const newMessage = await addWelcomeMessage(message);
-        setMessages([newMessage]);
-        toast.success('Nachricht erfolgreich hinzugefügt!');
-      } else {
-        // Show error if there is already a message
-        toast.error('Es ist bereits eine Nachricht vorhanden. Nur eine Nachricht ist erlaubt.');
-      }
-    } catch (error) {
-      toast.error('Fehler beim Speichern der Nachricht.');
-      console.error('Error saving message:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingMessage(null);
-  };
+  if (loading) return <div>Lade Daten...</div>;
 
   return (
-    <div>
-      {loading && <Spinner />}
-      <WelcomeForm editingMessage={editingMessage} onFormSubmit={handleFormSubmit} onCancel={handleCancel} />
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="px-4 py-2">Message</th>
-              <th className="px-4 py-2">Actions</th>
+    <div className="overflow-x-auto shadow-xl rounded-lg border border-slate-700">
+      <table className="w-full text-sm text-left text-slate-300">
+        <thead className="text-xs uppercase bg-slate-700 text-slate-300">
+          <tr>
+            <th scope="col" className="px-6 py-3">Nachricht</th>
+            <th scope="col" className="px-6 py-3 text-right">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {messages.map((msg) => (
+            <tr key={msg.id} className="border-b bg-slate-800/50 border-slate-700 hover:bg-slate-700">
+              <td className="px-6 py-4 text-slate-200">{msg.message}</td>
+              <td className="px-6 py-4 text-right space-x-4">
+                <a href={`/admin/welcome/edit/${msg.id}`} className="font-medium text-indigo-400 hover:underline">Editieren</a>
+                <button onClick={() => handleDelete(msg.id)} className="font-medium text-red-400 hover:underline">Löschen</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {messages.map((message) => (
-              <tr key={message.id}>
-                <td className="border px-4 py-2">{message.message}</td>
-                <td className="border px-4 py-2">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => handleEdit(message)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                    onClick={() => handleDelete(message.id!)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

@@ -1,116 +1,73 @@
-// components/LinkTable.tsx
-import { useState, useEffect } from "react";
-import { fetchLinks, addLink, updateLink, deleteLink } from "../../lib/utils";
-import LinkForm from "./LinkForm";
-import { LinkData } from "../../types/directus";
-import Spinner from "./spinner";
-import { toast } from "react-toastify";
+"use client";
 
-const LinkTable: React.FC = () => {
+import { useState, useEffect } from 'react';
+import { DIRECTUS_URL, MODELS } from "@/lib/config";
+import { LinkData } from "@/types/directus";
+import { toast } from 'react-toastify';
+
+const LinkTable = () => {
   const [links, setLinks] = useState<LinkData[]>([]);
-  const [editingLink, setEditingLink] = useState<LinkData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getLinks() {
-      setLoading(true);
+    const fetchLinks = async () => {
       try {
-        const data = await fetchLinks();
-        setLinks(data || []);
+        const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}`);
+        const data = await response.json();
+        setLinks(data.data);
       } catch (error) {
-        toast.error("Fehler beim Abrufen der Links.");
-        console.error("Error fetching links:", error);
+        toast.error("Fehler beim Laden der Links.");
+        console.error(error);
       } finally {
         setLoading(false);
       }
-    }
-    getLinks();
+    };
+
+    fetchLinks();
   }, []);
 
-  const handleEdit = (link: LinkData) => {
-    setEditingLink(link);
-  };
-
   const handleDelete = async (id: number) => {
-    setLoading(true);
+    if (!confirm("Bist du sicher, dass du diesen Link löschen möchtest?")) return;
+
     try {
-      await deleteLink(id);
-      setLinks(links.filter((link) => link.id !== id));
+      const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error("Fehler beim Löschen");
+      
+      setLinks(links.filter(link => link.id !== id));
       toast.success("Link erfolgreich gelöscht!");
     } catch (error) {
       toast.error("Fehler beim Löschen des Links.");
-      console.error("Error deleting link:", error);
-    } finally {
-      setLoading(false);
+      console.error(error);
     }
   };
 
-  const handleFormSubmit = async (link: LinkData) => {
-    setLoading(true);
-    try {
-      if (editingLink) {
-        const updatedLink = await updateLink(editingLink.id!, link);
-        setLinks(links.map((l) => (l.id === updatedLink.id ? updatedLink : l)));
-        setEditingLink(null);
-        toast.success("Link erfolgreich aktualisiert!");
-      } else {
-        const newLink = await addLink(link);
-        setLinks([...links, newLink]);
-        toast.success("Link erfolgreich hinzugefügt!");
-      }
-    } catch (error) {
-      toast.error("Fehler beim Speichern des Links.");
-      console.error("Error saving link:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingLink(null);
-  };
+  if (loading) return <div>Lade Daten...</div>;
 
   return (
-    <div>
-      {loading && <Spinner />}
-      <LinkForm
-        editingLink={editingLink}
-        onFormSubmit={handleFormSubmit}
-        onCancel={handleCancel}
-      />
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="w-1/3 px-4 py-2">URL</th>
-              <th className="w-1/3 px-4 py-2">Title</th>
-              <th className="w-1/3 px-4 py-2">Actions</th>
+    <div className="overflow-x-auto shadow-xl rounded-lg border border-slate-700">
+      <table className="w-full text-sm text-left text-slate-300">
+        <thead className="text-xs uppercase bg-slate-700 text-slate-300">
+          <tr>
+            <th scope="col" className="px-6 py-3">Titel</th>
+            <th scope="col" className="px-6 py-3">URL</th>
+            <th scope="col" className="px-6 py-3 text-right">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {links.map((link) => (
+            <tr key={link.id} className="border-b bg-slate-800/50 border-slate-700 hover:bg-slate-700">
+              <td className="px-6 py-4 font-medium text-slate-200 whitespace-nowrap">{link.title}</td>
+              <td className="px-6 py-4 text-slate-400">{link.url}</td>
+              <td className="px-6 py-4 text-right space-x-4">
+                <a href={`/admin/links/edit/${link.id}`} className="font-medium text-indigo-400 hover:underline">Editieren</a>
+                <button onClick={() => handleDelete(link.id)} className="font-medium text-red-400 hover:underline">Löschen</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {links.map((link) => (
-              <tr key={link.url}>
-                <td className="border px-4 py-2">{link.url}</td>
-                <td className="border px-4 py-2">{link.title}</td>
-                <td className="border px-4 py-2">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => handleEdit(link)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                    onClick={() => handleDelete(link.id!)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
