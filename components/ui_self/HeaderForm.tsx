@@ -20,7 +20,10 @@ const HeaderForm: React.FC<HeaderFormProps> = ({ editingHeader, onFormSubmit, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onFormSubmit({ header: headerText }); // Änderung hier
+    onFormSubmit({
+      id: editingHeader?.id || 0,
+      header: headerText
+    });
   };
 
   return (

@@ -24,7 +24,10 @@ const WelcomeForm: React.FC<WelcomeFormProps> = ({ editingMessage, onFormSubmit,
     event.preventDefault();
     if (message.trim()) {
       setError('');
-      onFormSubmit({ message });
+      onFormSubmit({
+        id: editingMessage?.id || 0,
+        message
+      });
     } else {
       setError('Bitte geben Sie eine Nachricht ein.');
     }

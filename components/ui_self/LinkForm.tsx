@@ -24,7 +24,11 @@ const LinkForm: React.FC<LinkFormProps> = ({ editingLink, onFormSubmit, onCancel
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onFormSubmit({ url, title });
+    onFormSubmit({
+      id: editingLink?.id || 0,
+      url,
+      title
+    });
     setUrl('');
     setTitle('');
   };
