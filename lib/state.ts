@@ -15,7 +15,7 @@ const useUserStore = create<UserState>()(
       logout: () => set({ token: null }),
     }),
     {
-      name: 'user-storage', // Name des localStorage Keys
+      name: 'user-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )

@@ -7,7 +7,6 @@ export const adminTabs = [
   {
     title: "Links",
     value: "links",
-    // Hier kann man auch Icons hinzufügen, wenn die Tabs Komponente das unterstützt
     content: (
       <div className="w-full max-h-[calc(100vh-350px)] overflow-y-auto p-8 bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-300">
         <div className="mb-8 border-b border-slate-800 pb-4">

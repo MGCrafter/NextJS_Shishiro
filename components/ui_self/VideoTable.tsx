@@ -11,12 +11,8 @@ const VideoTable = () => {
   const token = useUserStore((state) => state.token);
   const [videos, setVideos] = useState<BackgroundVideoData[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // State für Bearbeiten
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
-
-  // State für Hinzufügen
   const [isAdding, setIsAdding] = useState(false);
   const [newValue, setNewValue] = useState("");
 
@@ -78,7 +74,6 @@ const VideoTable = () => {
 
   const handleSetActive = async (id: number) => {
     try {
-      // Setze alle auf inactive
       await Promise.all(
         videos.map(v =>
           fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}/${v.id}`, {
@@ -89,14 +84,12 @@ const VideoTable = () => {
         )
       );
 
-      // Setze das gewählte auf active
       await fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}/${id}`, {
         method: 'PATCH',
         headers: getHeaders(),
         body: JSON.stringify({ is_active: true }),
       });
 
-      // Update local state
       setVideos(videos.map(v => ({ ...v, is_active: v.id === id })));
       toast.success("Als aktiv gesetzt!");
     } catch (error) {
@@ -126,7 +119,6 @@ const VideoTable = () => {
 
   return (
     <div className="space-y-4">
-      {/* Info Box */}
       <div className="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl">
         <p className="text-sm text-indigo-300">
           <strong>Tipp:</strong> Du kannst entweder eine vollständige URL eingeben (z.B. https://example.com/video.mp4)
@@ -136,7 +128,6 @@ const VideoTable = () => {
         </p>
       </div>
 
-      {/* Add Video Form */}
       {isAdding && (
         <div className="p-4 bg-slate-800 border border-indigo-500/30 rounded-xl flex gap-2 items-center animate-in fade-in">
           <input
@@ -243,7 +234,6 @@ const VideoTable = () => {
         </table>
       </div>
 
-      {/* Add Button unten */}
       {videos.length > 0 && !isAdding && (
         <button
           onClick={() => setIsAdding(true)}

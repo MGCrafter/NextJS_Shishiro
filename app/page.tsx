@@ -2,11 +2,8 @@ import { DIRECTUS_URL, MODELS } from "../lib/config.js";
 import Spinner from "../components/ui/spinner";
 import Footer from "@/components/footer.js";
 import InteractiveContent from "@/components/InteractiveContent";
-
-// Importiere die Typdefinitionen
 import { HeaderMessageData, WelcomeMessageData, LinkData, BackgroundVideoData } from "../types/directus";
 
-// Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
 
 async function getHomePageData() {
@@ -31,7 +28,6 @@ async function getHomePageData() {
 
     console.log("Data fetched successfully on the server.");
 
-    // Finde das aktive Video oder nehme das erste
     const activeVideo = videoData.data?.find((v: BackgroundVideoData) => v.is_active) || videoData.data?.[0];
 
     return {
@@ -53,15 +49,11 @@ export default async function HomePage() {
     return <div>Could not load page content.</div>;
   }
 
-  // Fallback auf /website.mp4, falls kein Video in Directus gesetzt ist
   const videoUrl = video?.video_url || "/website.mp4";
-
-  // Prüfe, ob es ein GIF ist
   const isGif = videoUrl.toLowerCase().endsWith('.gif');
 
   return (
     <div className="video min-h-screen w-full overflow-auto relative">
-      {/* Video/GIF Background */}
       <div className="absolute inset-0 z-10">
         {isGif ? (
           <img src={videoUrl} alt="Background" className="w-full h-full object-cover" />
@@ -73,7 +65,6 @@ export default async function HomePage() {
         )}
       </div>
 
-      {/* Content */}
       <div className="m relative z-20 flex flex-col items-center justify-center h-full">
         <h1 className="md:text-6xl text-4xl text-white mt-12">{header.header}</h1>
 
@@ -83,7 +74,6 @@ export default async function HomePage() {
           </h2>
         )}
 
-        {/* Hier übergeben wir die Daten an unsere neue Client Component */}
         <InteractiveContent links={links} />
       </div>
     </div>

@@ -13,7 +13,6 @@ const LinkTable = () => {
   const [links, setLinks] = useState<LinkData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State für Bearbeitung
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; url: string } | null>(null);
 
@@ -44,12 +43,9 @@ const LinkTable = () => {
     return h;
   };
 
-  // --- DRAG & DROP SORTIERUNG ---
   const handleReorder = async (newLinks: LinkData[]) => {
     setLinks(newLinks);
 
-    // Wir speichern ALLE Sort-Indizes neu basierend auf der Array-Position
-    // Index 0 = Sort 0, Index 1 = Sort 1, usw.
     const updatePromises = newLinks.map((link, index) => {
       return fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${link.id}`, {
         method: 'PATCH',
@@ -60,15 +56,12 @@ const LinkTable = () => {
 
     try {
       await Promise.all(updatePromises);
-      // Optional: toast.success("Reihenfolge gespeichert"); // Kann nerven bei jedem Drag, lieber stumm oder nur bei Fehler
     } catch (error) {
       toast.error("Fehler beim Speichern der Reihenfolge");
       console.error(error);
-      // Hier könnte man die Liste neu laden, um Sync-Probleme zu vermeiden
     }
   };
 
-  // --- LÖSCHEN ---
   const handleDelete = async (id: number) => {
     if (!confirm("Bist du sicher, dass du diesen Link löschen möchtest?")) return;
     try {
@@ -83,13 +76,11 @@ const LinkTable = () => {
     }
   };
 
-  // --- EDITIEREN STARTEN ---
   const handleEditClick = (link: LinkData) => {
     setEditingId(link.id);
     setEditForm({ title: link.title, url: link.url });
   };
 
-  // --- SPEICHERN (PATCH) ---
   const handleSaveClick = async () => {
     if (!editForm || editingId === null) return;
     try {
@@ -109,15 +100,12 @@ const LinkTable = () => {
     }
   };
 
-  // --- ABBRECHEN ---
   const handleCancelClick = () => {
     setEditingId(null);
     setEditForm(null);
   };
 
-  // --- HINZUFÜGEN (POST) ---
   const handleAddClick = async () => {
-    // Erstellt einen neuen Link ganz unten
     const newLinkData = {
       title: "Neuer Link",
       url: "https://",
@@ -134,7 +122,6 @@ const LinkTable = () => {
       const createdLink = result.data;
       
       setLinks([...links, createdLink]);
-      // Direkt in den Edit-Modus wechseln
       setEditingId(createdLink.id);
       setEditForm({ title: createdLink.title, url: createdLink.url });
       toast.success("Link erstellt - Bitte bearbeiten");
@@ -179,10 +166,8 @@ const LinkTable = () => {
               key={link.id} 
               value={link} 
               id={`link-${link.id}`}
-              // Nur draggen, wenn wir nicht gerade editieren
               drag={!editingId} 
               className="group mb-2 last:mb-0"
-              // Sanfte Animationen
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               <div className={`
@@ -208,7 +193,6 @@ const LinkTable = () => {
                 {/* Content Area */}
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-3">
                   {editingId === link.id ? (
-                    // EDIT MODE
                     <>
                       <div className="md:col-span-4">
                         <label className="block text-[10px] uppercase text-indigo-400 font-bold mb-1">Titel</label>
@@ -231,7 +215,6 @@ const LinkTable = () => {
                       </div>
                     </>
                   ) : (
-                    // VIEW MODE
                     <>
                       <div className="md:col-span-4 font-medium text-white truncate">
                         {link.title}
@@ -246,7 +229,6 @@ const LinkTable = () => {
                 {/* Actions / Buttons */}
                 <div className="flex items-center gap-2 ml-2">
                   {editingId === link.id ? (
-                    // EDIT ACTIONS
                     <>
                       <button 
                         onClick={handleSaveClick} 
@@ -264,7 +246,6 @@ const LinkTable = () => {
                       </button>
                     </>
                   ) : (
-                    // VIEW ACTIONS
                     <>
                       <button 
                         onClick={() => handleEditClick(link)} 

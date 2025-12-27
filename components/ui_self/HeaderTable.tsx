@@ -12,11 +12,9 @@ const HeaderTable = () => {
   const [headers, setHeaders] = useState<HeaderMessageData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State für Bearbeiten
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  // State für Hinzufügen
   const [isAdding, setIsAdding] = useState(false);
   const [newValue, setNewValue] = useState("");
 

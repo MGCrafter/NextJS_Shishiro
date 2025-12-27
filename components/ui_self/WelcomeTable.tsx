@@ -12,11 +12,9 @@ const WelcomeTable = () => {
   const [messages, setMessages] = useState<WelcomeMessageData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Edit State
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  // Add State
   const [isAdding, setIsAdding] = useState(false);
   const [newValue, setNewValue] = useState("");
 

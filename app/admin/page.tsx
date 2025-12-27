@@ -3,13 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Tabs } from "../../components/ui/tabs";
-
-// Components
 import LinkEditor from "../../components/admin/LinkEditor";
 import HeaderEditor from "../../components/admin/HeaderEditor";
 import WelcomeEditor from "../../components/admin/WelcomeEditor";
-
-// Store & Config
 import useUserStore from "../../lib/state";
 import { adminTabs } from "./adminConfig";
 
@@ -38,8 +34,6 @@ const AdminPage = () => {
 
   return (
     <div className="flex flex-col bg-slate-950 text-white">
-
-      {/* Header - Sticky oben */}
       <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/95 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
@@ -62,7 +56,6 @@ const AdminPage = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-grow container mx-auto px-6 py-8">
         <Tabs
           tabs={adminTabs}
