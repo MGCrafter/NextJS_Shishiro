@@ -7,9 +7,14 @@ import { DIRECTUS_URL } from "../../lib/config";
 import ShootingStars from "@/components/ui/shooting-stars";
 import { StarsBackground } from "@/components/ui/stars-background";
 
+/**
+ * Login Seite
+ * Authentifizierung mit Directus CMS
+ * Speichert Access Token und Refresh Token im State
+ */
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const setToken = useUserStore((state) => state.setToken);
+  const setTokens = useUserStore((state) => state.setTokens);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +38,7 @@ const LoginPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setToken(data.data.access_token);
+      setTokens(data.data.access_token, data.data.refresh_token);
       router.push("/admin");
     } catch (error) {
       setError("Login failed");

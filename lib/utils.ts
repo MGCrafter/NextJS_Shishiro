@@ -1,13 +1,19 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { DIRECTUS_URL, MODELS } from "../lib/config.js";
+import { DIRECTUS_URL, MODELS, refreshAccessToken } from "../lib/config.js";
 import { LinkData, WelcomeMessageData, HeaderMessageData } from "../types/directus";
-import useUserStore from './state'; 
+import useUserStore from './state';
 
+/**
+ * Utility für Tailwind CSS Klassen
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Erstellt Authorization Headers mit aktuellem Access Token
+ */
 const getAuthHeaders = () => {
   const token = useUserStore.getState().token;
   return {
@@ -16,12 +22,115 @@ const getAuthHeaders = () => {
   };
 };
 
-//LINKS_MESSAGE
+/**
+ * Token Refresh State Management
+ * Verhindert parallele Refresh-Requests
+ */
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const onRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
+/**
+ * Fetch Wrapper mit automatischem Token Refresh
+ *
+ * Funktionsweise:
+ * 1. Sendet Request mit aktuellem Access Token
+ * 2. Bei 401-Fehler: Refresh Token wird verwendet um neuen Access Token zu holen
+ * 3. Request wird mit neuem Token wiederholt
+ * 4. Bei Fehler beim Refresh: User wird ausgeloggt
+ *
+ * Parallele Requests während Refresh werden in Queue gestellt
+ * und mit dem neuen Token ausgeführt
+ */
+export const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const headers = getAuthHeaders();
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 401) {
+    const { refreshToken } = useUserStore.getState();
+
+    if (!refreshToken) {
+      useUserStore.getState().logout();
+      window.location.href = '/login';
+      throw new Error('No refresh token available');
+    }
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+
+      try {
+        const tokens = await refreshAccessToken(refreshToken);
+        useUserStore.getState().setTokens(tokens.access_token, tokens.refresh_token);
+        isRefreshing = false;
+        onRefreshed(tokens.access_token);
+
+        const newHeaders = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${tokens.access_token}`
+        };
+
+        return await fetch(url, {
+          ...options,
+          headers: {
+            ...newHeaders,
+            ...options.headers,
+          },
+        });
+      } catch (error) {
+        isRefreshing = false;
+        useUserStore.getState().logout();
+        window.location.href = '/login';
+        throw error;
+      }
+    } else {
+      return new Promise<Response>((resolve) => {
+        addRefreshSubscriber((token: string) => {
+          const newHeaders = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          };
+
+          resolve(
+            fetch(url, {
+              ...options,
+              headers: {
+                ...newHeaders,
+                ...options.headers,
+              },
+            })
+          );
+        });
+      });
+    }
+  }
+
+  return response;
+};
+
+/**
+ * ===================
+ * LINKS API
+ * ===================
+ */
+
 export const fetchLinks = async (): Promise<LinkData[]> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.LINKS}`);
     const data = await response.json();
     return data.data;
   } catch (error) {
@@ -32,9 +141,8 @@ export const fetchLinks = async (): Promise<LinkData[]> => {
 
 export const addLink = async (link: Partial<LinkData>): Promise<LinkData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.LINKS}`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(link),
     });
     const data = await response.json();
@@ -50,9 +158,8 @@ export const updateLink = async (
   link: Partial<LinkData>
 ): Promise<LinkData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${id}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(link),
     });
     const data = await response.json();
@@ -65,9 +172,8 @@ export const updateLink = async (
 
 export const deleteLink = async (id: number): Promise<void> => {
   try {
-    await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${id}`, {
+    await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.LINKS}/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   } catch (error) {
     console.error('Error deleting link:', error);
@@ -75,12 +181,15 @@ export const deleteLink = async (id: number): Promise<void> => {
   }
 };
 
-// WELCOME_MESSAGE
+/**
+ * ===================
+ * WELCOME MESSAGE API
+ * ===================
+ */
+
 export const fetchWelcomeMessages = async (): Promise<WelcomeMessageData[]> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`);
     const data = await response.json();
     return data.data;
   } catch (error) {
@@ -91,9 +200,8 @@ export const fetchWelcomeMessages = async (): Promise<WelcomeMessageData[]> => {
 
 export const addWelcomeMessage = async (message: WelcomeMessageData): Promise<WelcomeMessageData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(message),
     });
     const data = await response.json();
@@ -106,9 +214,8 @@ export const addWelcomeMessage = async (message: WelcomeMessageData): Promise<We
 
 export const updateWelcomeMessage = async (id: number, message: WelcomeMessageData): Promise<WelcomeMessageData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}/${id}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.WELCOME}/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(message),
     });
     const data = await response.json();
@@ -121,9 +228,8 @@ export const updateWelcomeMessage = async (id: number, message: WelcomeMessageDa
 
 export const deleteWelcomeMessage = async (id: number): Promise<void> => {
   try {
-    await fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}/${id}`, {
+    await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.WELCOME}/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   } catch (error) {
     console.error('Error deleting welcome message:', error);
@@ -131,12 +237,15 @@ export const deleteWelcomeMessage = async (id: number): Promise<void> => {
   }
 };
 
-// HEADER_MESSAGE
+/**
+ * ===================
+ * HEADER MESSAGE API
+ * ===================
+ */
+
 export const fetchHeaderMessages = async (): Promise<HeaderMessageData[]> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.HEADER}`);
     const data = await response.json();
     return data.data;
   } catch (error) {
@@ -147,9 +256,8 @@ export const fetchHeaderMessages = async (): Promise<HeaderMessageData[]> => {
 
 export const addHeaderMessage = async (text: HeaderMessageData): Promise<HeaderMessageData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(text),
     });
     const data = await response.json();
@@ -162,9 +270,8 @@ export const addHeaderMessage = async (text: HeaderMessageData): Promise<HeaderM
 
 export const updateHeaderMessage = async (id: number, text: HeaderMessageData): Promise<HeaderMessageData> => {
   try {
-    const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
+    const response = await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(text),
     });
     const data = await response.json();
@@ -177,9 +284,8 @@ export const updateHeaderMessage = async (id: number, text: HeaderMessageData): 
 
 export const deleteHeaderMessage = async (id: number): Promise<void> => {
   try {
-    await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
+    await fetchWithAuth(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   } catch (error) {
     console.error('Error deleting header message:', error);

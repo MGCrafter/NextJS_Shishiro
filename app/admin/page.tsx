@@ -8,12 +8,23 @@ import HeaderEditor from "../../components/admin/HeaderEditor";
 import WelcomeEditor from "../../components/admin/WelcomeEditor";
 import useUserStore from "../../lib/state";
 import { adminTabs } from "./adminConfig";
+import { useInactivityLogout } from "../../lib/useInactivityLogout";
 
+/**
+ * Admin Panel
+ * Geschützte Seite - nur mit gültigem Token zugänglich
+ * Features:
+ * - Automatischer Logout nach 10 Min Inaktivität
+ * - Automatisches Token Refresh bei abgelaufenen Tokens
+ */
 const AdminPage = () => {
   const router = useRouter();
   const token = useUserStore((state) => state.token);
   const logout = useUserStore((state) => state.logout);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Aktiviert automatischen Logout bei Inaktivität
+  useInactivityLogout();
 
   useEffect(() => {
     setIsMounted(true);
