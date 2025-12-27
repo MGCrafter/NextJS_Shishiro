@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import useUserStore from './state';
@@ -31,7 +31,7 @@ export const useInactivityLogout = () => {
    * Setzt alle Timer zurück
    * Wird bei jeder User-Aktivität aufgerufen
    */
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -64,7 +64,7 @@ export const useInactivityLogout = () => {
       toast.info('Du wurdest wegen Inaktivität ausgeloggt.', { autoClose: 3000 });
       router.push('/login');
     }, INACTIVITY_TIMEOUT);
-  };
+  }, [router, logout]);
 
   useEffect(() => {
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
@@ -99,7 +99,7 @@ export const useInactivityLogout = () => {
         toast.dismiss(warningToastIdRef.current);
       }
     };
-  }, []);
+  }, [resetTimer]);
 
   return null;
 };

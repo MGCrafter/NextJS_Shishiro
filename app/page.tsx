@@ -10,11 +10,12 @@ async function getHomePageData() {
   console.log("Fetching data from Directus on the server...");
 
   try {
-    const [headerRes, welcomeRes, linksRes, videoRes] = await Promise.all([
+    const [headerRes, welcomeRes, linksRes, videoRes, appearanceRes] = await Promise.all([
       fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, { cache: 'no-store' }),
       fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, { cache: 'no-store' }),
       fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}?sort=sort`, { cache: 'no-store' }),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}`, { cache: 'no-store' })
+      fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}`, { cache: 'no-store' }),
+      fetch(`${DIRECTUS_URL}/items/${MODELS.APPEARANCE}?limit=1`, { cache: 'no-store' })
     ]);
 
     if (!headerRes.ok || !welcomeRes.ok || !linksRes.ok) {
@@ -25,6 +26,7 @@ async function getHomePageData() {
     const welcomeData = await welcomeRes.json();
     const linksData = await linksRes.json();
     const videoData = await videoRes.json();
+    const appearanceData = await appearanceRes.json();
 
     console.log("Data fetched successfully on the server.");
 
@@ -35,6 +37,7 @@ async function getHomePageData() {
       welcome: welcomeData.data[0] as WelcomeMessageData,
       links: linksData.data as LinkData[],
       video: activeVideo as BackgroundVideoData | null,
+      appearance: appearanceData.data?.[0] || null,
     };
   } catch (err) {
     console.error("Error fetching global data:", err);
@@ -43,7 +46,7 @@ async function getHomePageData() {
 }
 
 export default async function HomePage() {
-  const { header, welcome, links, video } = await getHomePageData();
+  const { header, welcome, links, video, appearance } = await getHomePageData();
 
   if (!header || links.length === 0) {
     return <div>Could not load page content.</div>;
@@ -87,7 +90,7 @@ export default async function HomePage() {
           </h2>
         )}
 
-        <InteractiveContent links={links} />
+        <InteractiveContent links={links} appearanceSettings={appearance} />
       </div>
     </div>
     </>

@@ -18,6 +18,13 @@ export function Button({
   borderClassName,
   duration,
   className,
+  gradientColor1 = "#ec4899",
+  gradientColor2 = "#8b5cf6",
+  gradientOpacity = 0.9,
+  gradientThickness = 32,
+  buttonBgColor = "#020617",
+  textColor = "#ffffff",
+  fontFamily = "Inter",
   ...otherProps
 }: {
   borderRadius?: string;
@@ -27,12 +34,19 @@ export function Button({
   borderClassName?: string;
   duration?: number;
   className?: string;
+  gradientColor1?: string;
+  gradientColor2?: string;
+  gradientOpacity?: number;
+  gradientThickness?: number;
+  buttonBgColor?: string;
+  textColor?: string;
+  fontFamily?: string;
   [key: string]: any;
 }) {
   return (
     <Component
       className={cn(
-        "g-transparent relative text-xl  h-28 md:w-96 w-80 p-[1px] overflow-hidden ",
+        "bg-transparent relative text-xl h-28 md:w-96 w-80 p-[1px] overflow-hidden",
         containerClassName
       )}
       style={{
@@ -46,21 +60,27 @@ export function Button({
       >
         <MovingBorder duration={duration} rx="30%" ry="30%">
           <div
-            className={cn(
-              "h-20 w-20 opacity-[1] bg-[radial-gradient(var(--red-500)_80%,transparent_20%)]",
-              borderClassName
-            )}
+            className={cn(borderClassName)}
+            style={{
+              height: `${gradientThickness}px`,
+              width: `${gradientThickness}px`,
+              opacity: gradientOpacity,
+              background: `radial-gradient(${gradientColor1} 40%, ${gradientColor2} 60%, transparent 90%)`
+            }}
           />
         </MovingBorder>
       </div>
 
       <div
         className={cn(
-          "relative bg-red-900/[0.9] border border-red-800 backdrop-blur-xl text-white flex items-center justify-center w-full h-full text-sm antialiased",
+          "relative backdrop-blur-xl flex items-center justify-center w-full h-full text-sm antialiased",
           className
         )}
         style={{
           borderRadius: `calc(${borderRadius} * 0.96)`,
+          backgroundColor: buttonBgColor,
+          color: textColor,
+          fontFamily: fontFamily
         }}
       >
         {children}

@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import useUserStore from "../../lib/state";
 import { Reorder } from 'framer-motion';
 import { GripVertical, Pencil, Trash2, Check, X, Plus } from 'lucide-react';
+import { getAvailableThemes, getButtonTheme } from "../../lib/buttonThemes";
 
 const LinkTable = () => {
   const token = useUserStore((state) => state.token);
@@ -14,7 +15,7 @@ const LinkTable = () => {
   const [loading, setLoading] = useState(true);
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<{ title: string; url: string } | null>(null);
+  const [editForm, setEditForm] = useState<{ title: string; url: string; theme?: string; custom_color?: string } | null>(null);
 
   useEffect(() => {
     const fetchLinks = async () => {
@@ -82,7 +83,7 @@ const LinkTable = () => {
 
   const handleEditClick = (link: LinkData) => {
     setEditingId(link.id);
-    setEditForm({ title: link.title, url: link.url });
+    setEditForm({ title: link.title, url: link.url, theme: link.theme || 'default', custom_color: link.custom_color || '#7f1d1d' });
   };
 
   const handleSaveClick = async () => {
@@ -113,7 +114,9 @@ const LinkTable = () => {
     const newLinkData = {
       title: "Neuer Link",
       url: "https://",
-      sort: links.length
+      sort: links.length,
+      theme: "default",
+      custom_color: "#7f1d1d"
     };
 
     try {
@@ -124,10 +127,10 @@ const LinkTable = () => {
       });
       const result = await response.json();
       const createdLink = result.data;
-      
+
       setLinks([...links, createdLink]);
       setEditingId(createdLink.id);
-      setEditForm({ title: createdLink.title, url: createdLink.url });
+      setEditForm({ title: createdLink.title, url: createdLink.url, theme: createdLink.theme || 'default', custom_color: createdLink.custom_color || '#7f1d1d' });
       toast.success("Link erstellt - Bitte bearbeiten");
     } catch (error) {
       toast.error("Fehler beim Erstellen");
@@ -200,27 +203,65 @@ const LinkTable = () => {
                     <>
                       <div className="md:col-span-4">
                         <label className="block text-[10px] uppercase text-indigo-400 font-bold mb-1">Titel</label>
-                        <input 
+                        <input
                           autoFocus
-                          value={editForm?.title || ''} 
+                          value={editForm?.title || ''}
                           onChange={(e) => setEditForm({...editForm!, title: e.target.value})}
                           className="w-full bg-slate-950 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-600"
                           placeholder="Titel eingeben..."
                         />
                       </div>
-                      <div className="md:col-span-8">
+                      <div className="md:col-span-5">
                         <label className="block text-[10px] uppercase text-indigo-400 font-bold mb-1">URL</label>
-                        <input 
-                          value={editForm?.url || ''} 
+                        <input
+                          value={editForm?.url || ''}
                           onChange={(e) => setEditForm({...editForm!, url: e.target.value})}
                           className="w-full bg-slate-950 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-600 font-mono text-sm"
                           placeholder="https://..."
                         />
                       </div>
+                      <div className="md:col-span-3">
+                        <label className="block text-[10px] uppercase text-indigo-400 font-bold mb-1">Button-Farbe</label>
+                        <select
+                          value={editForm?.theme || 'default'}
+                          onChange={(e) => setEditForm({...editForm!, theme: e.target.value})}
+                          className="w-full bg-slate-950 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          {getAvailableThemes().map(({ key, theme }) => (
+                            <option key={key} value={key}>
+                              {theme.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {editForm?.theme === 'custom' && (
+                        <div className="md:col-span-12">
+                          <label className="block text-[10px] uppercase text-indigo-400 font-bold mb-1">Custom Farbe (Hex)</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={editForm?.custom_color || '#7f1d1d'}
+                              onChange={(e) => setEditForm({...editForm!, custom_color: e.target.value})}
+                              className="h-10 w-16 bg-slate-950 border border-indigo-500/50 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={editForm?.custom_color || '#7f1d1d'}
+                              onChange={(e) => setEditForm({...editForm!, custom_color: e.target.value})}
+                              className="flex-1 bg-slate-950 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                              placeholder="#FF0000"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
-                      <div className="md:col-span-4 font-medium text-white truncate">
+                      <div className="md:col-span-4 font-medium text-white truncate flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: link.theme === 'custom' && link.custom_color ? link.custom_color : getButtonTheme(link.theme).preview }}
+                        />
                         {link.title}
                       </div>
                       <div className="md:col-span-8 text-slate-400 truncate font-mono text-sm">

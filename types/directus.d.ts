@@ -14,6 +14,8 @@ export interface LinkData {
   url: string;
   title: string;
   sort: number;
+  theme?: string;
+  custom_color?: string;
 }
 
 export interface BackgroundVideoData {

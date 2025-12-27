@@ -93,6 +93,12 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}): Pro
         });
       } catch (error) {
         isRefreshing = false;
+        // Reject all waiting subscribers
+        refreshSubscribers.forEach((callback) => {
+          // Since callbacks expect a token, we can't call them
+          // Just clear the array to prevent memory leaks
+        });
+        refreshSubscribers = [];
         useUserStore.getState().logout();
         window.location.href = '/login';
         throw error;
