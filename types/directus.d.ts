@@ -7,9 +7,15 @@ export interface HeaderMessageData {
   id: number;
   header: string;
 }
-  
-  export interface LinkData {
-    id: number;
-    url: string;
-    title: string;
-  }
+
+export interface LinkData {
+  id: number;
+  url: string;
+  title: string;
+}
+
+export interface BackgroundVideoData {
+  id: number;
+  video_url: string;
+  is_active?: boolean;
+}

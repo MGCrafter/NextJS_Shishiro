@@ -1,59 +1,19 @@
-// app/admin/page.tsx
-
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useUserStore from "../../lib/state";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// Aceternity UI Komponente importieren
+import { useEffect, useState } from "react";
 import { Tabs } from "../../components/ui/tabs";
 
-// Deine eigenen Editor-Komponenten importieren
+// Components
 import LinkEditor from "../../components/admin/LinkEditor";
 import HeaderEditor from "../../components/admin/HeaderEditor";
 import WelcomeEditor from "../../components/admin/WelcomeEditor";
 
-// Definition der Tabs mit neuem Design
-const adminTabs = [
-  {
-    title: "Links",
-    value: "links",
-    content: (
-      <div className="p-8 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 shadow-2xl">
-        <h2 className="text-3xl font-bold mb-2 text-white">Links verwalten</h2>
-        <p className="text-slate-400 mb-8">Hier kannst du die Links auf der Hauptseite bearbeiten, hinzufügen oder löschen.</p>
-        <LinkEditor />
-      </div>
-    ),
-  },
-  {
-    title: "Header",
-    value: "header",
-    content: (
-      <div className="p-8 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 shadow-2xl">
-        <h2 className="text-3xl font-bold mb-2 text-white">Header verwalten</h2>
-        <p className="text-slate-400 mb-8">Passe den Haupttitel der Seite an.</p>
-        <HeaderEditor />
-      </div>
-    ),
-  },
-  {
-    title: "Welcome",
-    value: "welcome",
-    content: (
-      <div className="p-8 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 shadow-2xl">
-        <h2 className="text-3xl font-bold mb-2 text-white">Welcome Message verwalten</h2>
-        <p className="text-slate-400 mb-8">Bearbeite die Begrüßungsnachricht unter dem Header.</p>
-        <WelcomeEditor />
-      </div>
-    ),
-  },
-];
+// Store & Config
+import useUserStore from "../../lib/state";
+import { adminTabs } from "./adminConfig";
 
-const AdminPage: React.FC = () => {
+const AdminPage = () => {
   const router = useRouter();
   const token = useUserStore((state) => state.token);
   const logout = useUserStore((state) => state.logout);
@@ -69,9 +29,7 @@ const AdminPage: React.FC = () => {
     }
   }, [token, router, isMounted]);
 
-  if (!isMounted) {
-    return null;
-  }
+  if (!isMounted) return null;
 
   const handleLogout = () => {
     logout();
@@ -79,23 +37,24 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-950 text-white min-h-screen flex flex-col">
-      <ToastContainer position="bottom-right" theme="dark" />
+    <div className="flex flex-col bg-slate-950 text-white">
 
-      {/* Header-Bereich */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
-        <div className="container mx-auto p-6 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-indigo-400">Admin Panel</h1>
-          <div className="flex gap-4">
+      {/* Header - Sticky oben */}
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/95 backdrop-blur-md shadow-sm">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            Admin Panel
+          </h1>
+          <div className="flex gap-3">
             <button
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all duration-200"
               onClick={() => window.open('/', '_blank')}
+              className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
             >
               Zur Homepage
             </button>
             <button
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg"
               onClick={handleLogout}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 rounded-lg transition-all"
             >
               Logout
             </button>
@@ -103,14 +62,13 @@ const AdminPage: React.FC = () => {
         </div>
       </header>
 
-            {/* Haupt-Inhaltsbereich */}
-      <main className="flex-grow container mx-auto p-6">
+      {/* Main Content */}
+      <main className="flex-grow container mx-auto px-6 py-8">
         <Tabs
           tabs={adminTabs}
-          containerClassName="mb-8"
-          activeTabClassName="bg-indigo-600 text-white shadow-lg"
-          // HIER IST DIE ÄNDERUNG: Die ! vor den Farben
-          tabClassName="px-6 py-3 font-semibold !text-slate-400 hover:!text-white"
+          activeTabClassName="bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+          tabClassName="px-6 py-3 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+          contentClassName="mt-6"
         />
       </main>
     </div>

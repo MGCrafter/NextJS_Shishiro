@@ -15,11 +15,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen bg-slate-950">
         <main className="flex-grow">
           {children}
         </main>
-        <ToastContainer />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
         <Footer />
       </body>
     </html>

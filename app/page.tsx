@@ -1,19 +1,20 @@
-import { DIRECTUS_URL, MODELS } from "../lib/config.js"; 
+import { DIRECTUS_URL, MODELS } from "../lib/config.js";
 import Spinner from "../components/ui/spinner";
 import Footer from "@/components/footer.js";
 import InteractiveContent from "@/components/InteractiveContent";
 
 // Importiere die Typdefinitionen
-import { HeaderMessageData, WelcomeMessageData, LinkData } from "../types/directus";
+import { HeaderMessageData, WelcomeMessageData, LinkData, BackgroundVideoData } from "../types/directus";
 
 async function getHomePageData() {
   console.log("Fetching data from Directus on the server...");
 
   try {
-    const [headerRes, welcomeRes, linksRes] = await Promise.all([
-      fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}`),
+    const [headerRes, welcomeRes, linksRes, videoRes] = await Promise.all([
+      fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, { cache: 'no-store' }),
+      fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, { cache: 'no-store' }),
+      fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}?sort=sort`, { cache: 'no-store' }),
+      fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}`, { cache: 'no-store' })
     ]);
 
     if (!headerRes.ok || !welcomeRes.ok || !linksRes.ok) {
@@ -23,13 +24,18 @@ async function getHomePageData() {
     const headerData = await headerRes.json();
     const welcomeData = await welcomeRes.json();
     const linksData = await linksRes.json();
+    const videoData = await videoRes.json();
 
     console.log("Data fetched successfully on the server.");
+
+    // Finde das aktive Video oder nehme das erste
+    const activeVideo = videoData.data?.find((v: BackgroundVideoData) => v.is_active) || videoData.data?.[0];
 
     return {
       header: headerData.data[0] as HeaderMessageData,
       welcome: welcomeData.data[0] as WelcomeMessageData,
       links: linksData.data as LinkData[],
+      video: activeVideo as BackgroundVideoData | null,
     };
   } catch (err) {
     console.error("Error fetching global data:", err);
@@ -38,20 +44,30 @@ async function getHomePageData() {
 }
 
 export default async function HomePage() {
-  const { header, welcome, links } = await getHomePageData();
+  const { header, welcome, links, video } = await getHomePageData();
 
   if (!header || links.length === 0) {
     return <div>Could not load page content.</div>;
   }
 
+  // Fallback auf /website.mp4, falls kein Video in Directus gesetzt ist
+  const videoUrl = video?.video_url || "/website.mp4";
+
+  // Prüfe, ob es ein GIF ist
+  const isGif = videoUrl.toLowerCase().endsWith('.gif');
+
   return (
     <div className="video min-h-screen w-full overflow-auto relative">
-      {/* Video Background */}
+      {/* Video/GIF Background */}
       <div className="absolute inset-0 z-10">
-        <video className="w-full h-full object-cover" autoPlay muted loop playsInline>
-          <source src="/website.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        {isGif ? (
+          <img src={videoUrl} alt="Background" className="w-full h-full object-cover" />
+        ) : (
+          <video className="w-full h-full object-cover" autoPlay muted loop playsInline>
+            <source src={videoUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        )}
       </div>
 
       {/* Content */}

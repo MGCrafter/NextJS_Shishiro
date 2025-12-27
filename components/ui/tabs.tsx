@@ -106,15 +106,12 @@ export const FadeInDiv = ({
           key={tab.value}
           layoutId={tab.value}
           style={{
-            scale: 1 - idx * 0.1,
-            top: hovering ? idx * -50 : 0,
-            zIndex: -idx,
-            opacity: idx < 3 ? 1 - idx * 0.1 : 0,
+            display: idx === 0 ? 'block' : 'none',
           }}
-          animate={{
-            y: isActive(tab) ? [0, 40, 0] : 0,
-          }}
-          className={cn("w-full h-full absolute top-0 left-0", className)}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={cn("w-full h-full", className)}
         >
           {tab.content}
         </motion.div>
