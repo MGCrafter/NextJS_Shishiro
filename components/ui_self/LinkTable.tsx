@@ -23,12 +23,16 @@ const LinkTable = () => {
 
       try {
         const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}?sort=sort`, { headers });
-        if (!response.ok) throw new Error("Fehler beim Laden");
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Directus API Error:', response.status, errorText);
+          throw new Error(`API Error: ${response.status}`);
+        }
         const data = await response.json();
         setLinks(data.data);
       } catch (error) {
+        console.error('LinkTable fetch error:', error);
         toast.error("Fehler beim Laden der Links.");
-        console.error(error);
       } finally {
         setLoading(false);
       }

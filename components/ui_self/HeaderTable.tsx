@@ -14,9 +14,11 @@ const HeaderTable = () => {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editFont, setEditFont] = useState("");
 
   const [isAdding, setIsAdding] = useState(false);
   const [newValue, setNewValue] = useState("");
+  const [newFont, setNewFont] = useState("");
 
   useEffect(() => {
     const fetchHeaders = async () => {
@@ -48,11 +50,11 @@ const HeaderTable = () => {
       const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}/${id}`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ header: editValue }),
+        body: JSON.stringify({ header: editValue, font: editFont || null }),
       });
       if (!response.ok) throw new Error("Fehler");
-      
-      setHeaders(headers.map(h => h.id === id ? { ...h, header: editValue } : h));
+
+      setHeaders(headers.map(h => h.id === id ? { ...h, header: editValue, font: editFont || undefined } : h));
       toast.success("Header aktualisiert!");
       setEditingId(null);
     } catch (error) {
@@ -80,13 +82,14 @@ const HeaderTable = () => {
       const response = await fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ header: newValue }),
+        body: JSON.stringify({ header: newValue, font: newFont || null }),
       });
       const res = await response.json();
       setHeaders([...headers, res.data]);
       toast.success("Header erstellt!");
       setIsAdding(false);
       setNewValue("");
+      setNewFont("");
     } catch (error) {
       toast.error("Erstellen fehlgeschlagen.");
     }
@@ -96,18 +99,35 @@ const HeaderTable = () => {
 
   return (
     <div className="space-y-4">
-      {/* Add Header Form */}
+      <div className="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl">
+        <p className="text-sm text-indigo-300">
+          <strong>Schriftart ändern:</strong> Du kannst Google Fonts verwenden (z.B. "Poppins", "Roboto", "Montserrat").
+          <br />
+          Gehe zu <a href="https://fonts.google.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-200">fonts.google.com</a>, wähle eine Schriftart und kopiere den Namen.
+        </p>
+      </div>
+
       {isAdding && (
-        <div className="p-4 bg-slate-800 border border-indigo-500/30 rounded-xl flex gap-2 items-center animate-in fade-in">
-          <input 
-            autoFocus
-            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
-            placeholder="Neuer Header Titel..."
-            value={newValue}
-            onChange={(e) => setNewValue(e.target.value)}
-          />
-          <button onClick={handleAdd} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
-          <button onClick={() => setIsAdding(false)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg">Cancel</button>
+        <div className="p-4 bg-slate-800 border border-indigo-500/30 rounded-xl flex flex-col gap-3 animate-in fade-in">
+          <div className="flex gap-2">
+            <input
+              autoFocus
+              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+              placeholder="Header Titel..."
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+            />
+            <input
+              className="w-48 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono text-sm"
+              placeholder="Font (z.B. Poppins)"
+              value={newFont}
+              onChange={(e) => setNewFont(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button onClick={handleAdd} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
+            <button onClick={() => setIsAdding(false)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg">Cancel</button>
+          </div>
         </div>
       )}
 
@@ -116,6 +136,7 @@ const HeaderTable = () => {
           <thead className="text-xs uppercase bg-slate-800 text-slate-400">
             <tr>
               <th className="px-6 py-4">Header Text</th>
+              <th className="px-6 py-4">Schriftart</th>
               <th className="px-6 py-4 text-right">Aktionen</th>
             </tr>
           </thead>
@@ -124,13 +145,25 @@ const HeaderTable = () => {
               <tr key={h.id} className="group hover:bg-slate-800/50 transition-colors">
                 <td className="px-6 py-4">
                   {editingId === h.id ? (
-                    <input 
+                    <input
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
-                      className="w-full bg-slate-900 border border-indigo-500 rounded px-3 py-1 text-white focus:outline-none"
+                      className="w-full bg-slate-900 border border-indigo-500 rounded px-3 py-2 text-white focus:outline-none"
                     />
                   ) : (
                     <span className="font-medium text-lg text-white">{h.header}</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  {editingId === h.id ? (
+                    <input
+                      value={editFont}
+                      onChange={(e) => setEditFont(e.target.value)}
+                      className="w-full bg-slate-900 border border-indigo-500 rounded px-3 py-2 text-white focus:outline-none font-mono text-sm"
+                      placeholder="z.B. Poppins"
+                    />
+                  ) : (
+                    <span className="text-sm text-slate-400 font-mono">{h.font || 'Standard'}</span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -155,7 +188,11 @@ const HeaderTable = () => {
                     ) : (
                       <>
                         <button
-                          onClick={() => { setEditingId(h.id); setEditValue(h.header); }}
+                          onClick={() => {
+                            setEditingId(h.id);
+                            setEditValue(h.header);
+                            setEditFont(h.font || "");
+                          }}
                           className="p-2 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all transform scale-90 hover:scale-100"
                           title="Editieren"
                         >
@@ -176,7 +213,7 @@ const HeaderTable = () => {
             ))}
             {headers.length === 0 && !isAdding && (
               <tr>
-                <td colSpan={2} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
                   Kein Header gesetzt. <button onClick={() => setIsAdding(true)} className="text-indigo-400 underline ml-2">Jetzt erstellen?</button>
                 </td>
               </tr>

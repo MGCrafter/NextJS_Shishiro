@@ -6,6 +6,7 @@ export interface WelcomeMessageData {
 export interface HeaderMessageData {
   id: number;
   header: string;
+  font?: string;
 }
 
 export interface LinkData {

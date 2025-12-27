@@ -52,8 +52,16 @@ export default async function HomePage() {
   const videoUrl = video?.video_url || "/website.mp4";
   const isGif = videoUrl.toLowerCase().endsWith('.gif');
 
+  const fontUrl = header.font
+    ? `https://fonts.googleapis.com/css2?family=${header.font.replace(/ /g, '+')}:wght@400;700&display=swap`
+    : null;
+
   return (
-    <div className="video min-h-screen w-full overflow-auto relative">
+    <>
+      {fontUrl && (
+        <link rel="stylesheet" href={fontUrl} />
+      )}
+      <div className="video min-h-screen w-full overflow-auto relative">
       <div className="absolute inset-0 z-10">
         {isGif ? (
           <img src={videoUrl} alt="Background" className="w-full h-full object-cover" />
@@ -66,7 +74,12 @@ export default async function HomePage() {
       </div>
 
       <div className="m relative z-20 flex flex-col items-center justify-center h-full">
-        <h1 className="md:text-6xl text-4xl text-white mt-12">{header.header}</h1>
+        <h1
+          className="md:text-6xl text-4xl text-white mt-12"
+          style={header.font ? { fontFamily: header.font } : undefined}
+        >
+          {header.header}
+        </h1>
 
         {welcome && (
           <h2 className="md:text-4xl text-2xl text-center mt-8 text-white">
@@ -77,5 +90,6 @@ export default async function HomePage() {
         <InteractiveContent links={links} />
       </div>
     </div>
+    </>
   );
 }
