@@ -27,7 +27,8 @@ const LinkForm: React.FC<LinkFormProps> = ({ editingLink, onFormSubmit, onCancel
     onFormSubmit({
       id: editingLink?.id || 0,
       url,
-      title
+      title,
+      sort: editingLink?.sort || 0
     });
     setUrl('');
     setTitle('');

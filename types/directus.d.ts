@@ -12,6 +12,7 @@ export interface LinkData {
   id: number;
   url: string;
   title: string;
+  sort: number;
 }
 
 export interface BackgroundVideoData {

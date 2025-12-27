@@ -6,6 +6,9 @@ import InteractiveContent from "@/components/InteractiveContent";
 // Importiere die Typdefinitionen
 import { HeaderMessageData, WelcomeMessageData, LinkData, BackgroundVideoData } from "../types/directus";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 async function getHomePageData() {
   console.log("Fetching data from Directus on the server...");
 
