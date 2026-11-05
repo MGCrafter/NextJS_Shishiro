@@ -23,3 +23,13 @@ export interface BackgroundVideoData {
   video_url: string;
   is_active?: boolean;
 }
+
+export interface AppearanceSettings {
+  gradient_color_1: string;
+  gradient_color_2: string;
+  gradient_opacity: number;
+  gradient_thickness: number;
+  button_bg_color: string;
+  text_color: string;
+  font_family: string;
+}

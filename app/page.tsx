@@ -1,43 +1,39 @@
 import { DIRECTUS_URL, MODELS } from "../lib/config.js";
-import Spinner from "../components/ui/spinner";
-import Footer from "@/components/footer.js";
 import InteractiveContent from "@/components/InteractiveContent";
-import { HeaderMessageData, WelcomeMessageData, LinkData, BackgroundVideoData } from "../types/directus";
+import { fetchCollection } from "@/lib/directus-home";
+import { AppearanceSettings, HeaderMessageData, WelcomeMessageData, LinkData, BackgroundVideoData } from "../types/directus";
 
 export const dynamic = 'force-dynamic';
+const DIRECTUS_SERVER_URL = process.env.DIRECTUS_INTERNAL_URL || DIRECTUS_URL;
 
 async function getHomePageData() {
   console.log("Fetching data from Directus on the server...");
 
   try {
-    const [headerRes, welcomeRes, linksRes, videoRes, appearanceRes] = await Promise.all([
-      fetch(`${DIRECTUS_URL}/items/${MODELS.HEADER}`, { cache: 'no-store' }),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.WELCOME}`, { cache: 'no-store' }),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.LINKS}?sort=sort`, { cache: 'no-store' }),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.BACKGROUND_VIDEO}`, { cache: 'no-store' }),
-      fetch(`${DIRECTUS_URL}/items/${MODELS.APPEARANCE}?limit=1`, { cache: 'no-store' })
+    const optional = <T,>(url: string) =>
+      fetchCollection<T>(url).catch((error) => {
+        console.warn("Could not load optional Directus content:", error);
+        return [] as T[];
+      });
+
+    const [headerData, welcomeData, linksData, videoData, appearanceData] = await Promise.all([
+      fetchCollection<HeaderMessageData>(`${DIRECTUS_SERVER_URL}/items/${MODELS.HEADER}`, { requireItems: true }),
+      optional<WelcomeMessageData>(`${DIRECTUS_SERVER_URL}/items/${MODELS.WELCOME}`),
+      fetchCollection<LinkData>(`${DIRECTUS_SERVER_URL}/items/${MODELS.LINKS}?sort=sort`, { requireItems: true }),
+      optional<BackgroundVideoData>(`${DIRECTUS_SERVER_URL}/items/${MODELS.BACKGROUND_VIDEO}`),
+      optional<AppearanceSettings>(`${DIRECTUS_SERVER_URL}/items/${MODELS.APPEARANCE}?limit=1`),
     ]);
-
-    if (!headerRes.ok || !welcomeRes.ok || !linksRes.ok) {
-      throw new Error("Failed to fetch data from Directus");
-    }
-
-    const headerData = await headerRes.json();
-    const welcomeData = await welcomeRes.json();
-    const linksData = await linksRes.json();
-    const videoData = await videoRes.json();
-    const appearanceData = await appearanceRes.json();
 
     console.log("Data fetched successfully on the server.");
 
-    const activeVideo = videoData.data?.find((v: BackgroundVideoData) => v.is_active) || videoData.data?.[0];
+    const activeVideo = videoData.find((v) => v.is_active) || videoData[0];
 
     return {
-      header: headerData.data[0] as HeaderMessageData,
-      welcome: welcomeData.data[0] as WelcomeMessageData,
-      links: linksData.data as LinkData[],
+      header: headerData[0],
+      welcome: welcomeData[0],
+      links: linksData,
       video: activeVideo as BackgroundVideoData | null,
-      appearance: appearanceData.data?.[0] || null,
+      appearance: appearanceData[0] || undefined,
     };
   } catch (err) {
     console.error("Error fetching global data:", err);
@@ -47,10 +43,6 @@ async function getHomePageData() {
 
 export default async function HomePage() {
   const { header, welcome, links, video, appearance } = await getHomePageData();
-
-  if (!header || links.length === 0) {
-    return <div>Could not load page content.</div>;
-  }
 
   const videoUrl = video?.video_url || "/website.mp4";
   const isGif = videoUrl.toLowerCase().endsWith('.gif');
